@@ -1,0 +1,52 @@
+{
+  "name": "lift",
+  "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "eslint . --fix",
+    "prettify": "prettier . --write",
+    "prepare": "husky install",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
+  "bin": {
+    "lift": "lib/cli.js"
+  },
+  "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.32.2",
+    "@cosmjs/encoding": "^0.32.2",
+    "@cosmjs/proto-signing": "^0.32.2",
+    "@cosmjs/stargate": "^0.32.2",
+    "@cosmjs/tendermint-rpc": "^0.32.2",
+    "@cosmwasm/ts-codegen": "^0.35.3",
+    "change-case": "^5.3.0",
+    "commander": "^11.1.0",
+    "json2toml": "^6.0.0",
+    "toml": "^3.0.0",
+    "ts-node": "^10.9.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "prettier --write --ignore-unknown",
+      "eslint"
+    ]
+  },
+  "files": [
+    "lib"
+  ]
+}
