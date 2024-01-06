@@ -1,6 +1,6 @@
-import osmosis from './osmosis'
-import sei from './sei'
-import unknown from './unknown'
+import osmosis from './osmosis.js'
+import sei from './sei.js'
+import unknown from './unknown.js'
 
 export default function getTemplate(chain: string) {
   if (chain == 'sei') {

@@ -1,8 +1,12 @@
 import { AccountData, OfflineSigner } from '@cosmjs/proto-signing'
+import { GasPrice } from '@cosmjs/stargate'
 import path from 'path'
+import loadAccount from './account.js'
 import type { Config } from './config.js'
+import loadConfig from './config.js'
 import ExtendedClient from './extended-client.js'
 import type { State } from './state.js'
+import loadState from './state.js'
 
 export class WorkspaceContext {
   network: string
@@ -91,4 +95,56 @@ export class Contract {
       this.instance,
     )
   }
+}
+
+export interface WorkspaceOptions {
+  network: string
+  account?: string
+}
+
+export interface ContractOptions extends WorkspaceOptions {
+  instance: string
+}
+
+export async function createContext(
+  options: WorkspaceOptions,
+): Promise<WorkspaceContext> {
+  // load config
+  const config = await loadConfig()
+  const network = config.networks[options.network]
+
+  // load state
+  const state = await loadState(network.network_variant)
+
+  if (!options.account) {
+    options.account = Object.keys(config.accounts)[0]
+  }
+
+  // load account
+  const [signer, account] = await loadAccount(config, options.account)
+
+  // connect client
+  const client = await ExtendedClient.connectWithSigner(
+    network.rpc_endpoint,
+    signer,
+    { gasPrice: GasPrice.fromString(config.gas_price) },
+  )
+
+  // create context
+  return new WorkspaceContext(
+    options.network,
+    config,
+    state,
+    signer,
+    account,
+    client,
+  )
+}
+
+export function getContract(
+  context: WorkspaceContext,
+  contractName: string,
+  options: ContractOptions,
+) {
+  return new Contract(context, contractName, options.instance)
 }

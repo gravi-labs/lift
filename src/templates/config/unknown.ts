@@ -1,5 +1,5 @@
-import { Config } from '../../config'
-import type { DeepPartial } from '../../types'
+import { Config } from '../../config.js'
+import type { DeepPartial } from '../../types.js'
 
 const config: DeepPartial<Config> = {
   gas_price: '',

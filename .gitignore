@@ -11,3 +11,5 @@ lib
 
 Lift.toml
 .lift
+tasks
+contracts

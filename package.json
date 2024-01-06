@@ -12,6 +12,7 @@
     "build": "tsc --build",
     "clean": "tsc --build --clean"
   },
+  "main": "lib/index.js",
   "bin": {
     "lift": "lib/cli.js"
   },
@@ -35,6 +36,7 @@
     "@typescript-eslint/parser": "^6.17.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-require-extensions": "^0.1.3",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.1.1",

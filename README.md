@@ -4,6 +4,29 @@ The aim of Lift is to have unified and chain agnostic tool that helps with local
 
 ## Commands
 
+```
+Usage: lift [options] [command]
+
+Options:
+  -V, --version                         output the version number
+  -h, --help                            display help for command
+
+Commands:
+  init <CHAIN>                          Initialize config
+  build [options]                       Build and optimize workspace contracts
+  upload [options] <CONTRACT>           Upload contract
+  instantiate [options] <CONTRACT>      Instantiate contract
+  execute [options] <CONTRACT>          Execute contract message
+  query [options] <CONTRACT>            Query data from contract
+  state [options] <CONTRACT>            Dump contract state
+  ts-gen [options]                      Generate TypeScript type definitions and clients
+  script [options] <SCRIPT> [CONTRACT]  Run a script with workspace context and optionally contract
+  task:new <name>                       Create new task
+  task:new:contract <name>              Create new contract task
+  task:run                              Run task
+  help [command]                        display help for command
+```
+
 General arguments for most of the commands:
 
 * `-n / --network <NETWORK_NAME>`: Name of the network to use, based on networks defined in Lift.toml config (default: `local`)
@@ -79,6 +102,34 @@ Arguments:
 
 Generate TypeScript type definitions and clients based on contracts defined in the `Lift.toml` config, `[ts-gen]` section
 
+
+### `lift task:new <NAME>`
+
+Create new task
+
+Arguments:
+
+* `<NAME>` Task name
+
+
+### `lift task:new:contract <NAME>`
+
+Create new contract task
+
+Arguments:
+
+* `<NAME>` Task name
+
+
+### `lift task:run <NAME> [CONTRACT]`
+
+Run task
+
+Arguments:
+
+* `<NAME>` Task name
+* `[CONTRACT]` Optional contract name
+
 ## Configuration
 
 ### Lift.toml
@@ -126,10 +177,49 @@ Local state is stored in `.lift/state.local.json` file and it's recommend to add
 
 Shared state is stored in `.lift/state.json` file
 
+## Tasks
+
+Lift supports custom tasks for implementing custom logic or executing multiple commands.
+Tasks are located in the `tasks` folder of your repository.
+
+### General Task
+
+```js
+import { task } from 'lift'
+
+task((context) => {
+  console.log('Hello from task!')
+})
+```
+
+### Contract task
+
+```js
+import { contractTask } from 'lift'
+
+contractTask((context, contract) => {
+  console.log('Hello from contract task!')
+})
+```
+
+### Task with custom command line arguments
+
+```js
+import { task, workspaceCommand } from 'lift'
+
+const command = workspaceCommand()
+command.option('-l, --log', 'log')
+
+task(command, (context) => {
+  const options = command.opts()
+  if (options.log) {
+    console.log('Hello from task!')
+  }
+})
+```
 
 ## TODO
 
-- tasks - automate execution of multiple commands
 - app template - scaffold a template smart contract and frontend
 - integrate chain-registry (https://github.com/cosmos/chain-registry)
 - interactive console

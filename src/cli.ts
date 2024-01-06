@@ -1,7 +1,6 @@
-import { GasPrice } from '@cosmjs/stargate'
-import { Command, program } from 'commander'
+import { program } from 'commander'
+import fs from 'fs'
 import path from 'path'
-import loadAccount from './account.js'
 import build from './commands/build.js'
 import execute from './commands/execute.js'
 import init from './commands/init.js'
@@ -9,21 +8,20 @@ import instantiate from './commands/instantiate.js'
 import queryState from './commands/query-state.js'
 import query from './commands/query.js'
 import runScript from './commands/script.js'
+import {
+  TASK_TEMPLATE_CONTRACT,
+  createTask,
+  getTasksPath,
+} from './commands/task.js'
 import tsGen from './commands/ts-gen.js'
 import upload from './commands/upload.js'
-import loadConfig from './config.js'
-import { Contract, WorkspaceContext } from './context.js'
-import ExtendedClient from './extended-client.js'
-import loadState from './state.js'
-
-interface WorkspaceOptions {
-  network: string
-  account?: string
-}
-
-interface ContractOptions extends WorkspaceOptions {
-  instance: string
-}
+import {
+  ContractOptions,
+  WorkspaceOptions,
+  createContext,
+  getContract,
+} from './context.js'
+import { contractCommand, workspaceCommand } from './task.js'
 
 interface QueryOptions extends ContractOptions {
   msg: string
@@ -33,78 +31,12 @@ interface ExecuteOptions extends ContractOptions {
   msg: string
 }
 
-async function createContext(
-  options: WorkspaceOptions,
-): Promise<WorkspaceContext> {
-  // load config
-  const config = await loadConfig()
-  const network = config.networks[options.network]
-
-  // load state
-  const state = await loadState(network.network_variant)
-
-  if (!options.account) {
-    options.account = Object.keys(config.accounts)[0]
-  }
-
-  // load account
-  const [signer, account] = await loadAccount(config, options.account)
-
-  // connect client
-  const client = await ExtendedClient.connectWithSigner(
-    network.rpc_endpoint,
-    signer,
-    { gasPrice: GasPrice.fromString(config.gas_price) },
-  )
-
-  // create context
-  return new WorkspaceContext(
-    options.network,
-    config,
-    state,
-    signer,
-    account,
-    client,
-  )
-}
-
-function getContract(
-  context: WorkspaceContext,
-  contractName: string,
-  options: ContractOptions,
-) {
-  return new Contract(context, contractName, options.instance)
-}
-
 process.on('uncaughtException', (err) => {
   console.error(err.message)
   process.exit(1)
 })
 
 program.name('lift').version('0.1.0')
-
-function defineWorkspaceCommand(command: Command) {
-  command.option(
-    '-n, --network <NETWORK_NAME>',
-    'Name of the network to use',
-    'local',
-  )
-  command.option(
-    '-a, --account <ACCOUNT_NAME>',
-    'Name of the account to use as transaction signer',
-  )
-  return command
-}
-
-function defineContractCommand(command: Command) {
-  defineWorkspaceCommand(command)
-  command.option(
-    '-i, --instance <CONTRACT_INSTANCE>',
-    'Contract instance name',
-    'default',
-  )
-  return command
-}
 
 program
   .command('init <CHAIN>')
@@ -113,14 +45,14 @@ program
     init(chain)
   })
 
-defineWorkspaceCommand(program.command('build'))
+workspaceCommand(program.command('build'))
   .description('Build and optimize workspace contracts')
   .action(async (options: WorkspaceOptions) => {
     const context = await createContext(options)
     build(context)
   })
 
-defineWorkspaceCommand(program.command('upload <CONTRACT>'))
+workspaceCommand(program.command('upload <CONTRACT>'))
   .description('Upload contract')
   .action(async (contractName: string, options: ContractOptions) => {
     const context = await createContext(options)
@@ -128,7 +60,7 @@ defineWorkspaceCommand(program.command('upload <CONTRACT>'))
     upload(context, contract)
   })
 
-defineContractCommand(program.command('instantiate <CONTRACT>'))
+contractCommand(program.command('instantiate'))
   .description('Instantiate contract')
   .action(async (contractName: string, options: ContractOptions) => {
     const context = await createContext(options)
@@ -136,7 +68,7 @@ defineContractCommand(program.command('instantiate <CONTRACT>'))
     instantiate(context, contract)
   })
 
-defineContractCommand(program.command('execute <CONTRACT>'))
+contractCommand(program.command('execute'))
   .description('Execute contract message')
   .requiredOption('-m, --msg <MSG>', 'execute message')
   .action(async (contractName: string, options: ExecuteOptions) => {
@@ -145,7 +77,7 @@ defineContractCommand(program.command('execute <CONTRACT>'))
     execute(context, contract, options.msg)
   })
 
-defineContractCommand(program.command('query <CONTRACT>'))
+contractCommand(program.command('query'))
   .description('Query data from contract')
   .requiredOption('-m, --msg <MSG>', 'query message')
   .action(async (contractName: string, options: QueryOptions) => {
@@ -154,7 +86,7 @@ defineContractCommand(program.command('query <CONTRACT>'))
     query(context, contract, options.msg)
   })
 
-defineContractCommand(program.command('state <CONTRACT>'))
+contractCommand(program.command('state'))
   .description('Dump contract state')
   .action(async (contractName: string, options: ContractOptions) => {
     const context = await createContext(options)
@@ -162,14 +94,14 @@ defineContractCommand(program.command('state <CONTRACT>'))
     queryState(context, contract)
   })
 
-defineWorkspaceCommand(program.command('ts-gen'))
+workspaceCommand(program.command('ts-gen'))
   .description('Generate TypeScript type definitions and clients')
   .action(async (options: ContractOptions) => {
     const context = await createContext(options)
     tsGen(context)
   })
 
-defineWorkspaceCommand(program.command('script <SCRIPT> [CONTRACT]'))
+workspaceCommand(program.command('script <SCRIPT> [CONTRACT]'))
   .description('Run a script with workspace context and optionally contract')
   .action(
     async (
@@ -185,4 +117,31 @@ defineWorkspaceCommand(program.command('script <SCRIPT> [CONTRACT]'))
     },
   )
 
-program.parse()
+program
+  .command('task:new <NAME>')
+  .description('Create new task')
+  .action(async (name: string) => {
+    createTask(name)
+  })
+
+program
+  .command('task:new:contract <NAME>')
+  .description('Create new contract task')
+  .action(async (name: string) => {
+    createTask(name, TASK_TEMPLATE_CONTRACT)
+  })
+
+const taskRunCommand = program.command('task:run').description('Run task')
+
+const tasksPath = getTasksPath()
+const ext = '.js'
+for (const taskFileName of fs.readdirSync(tasksPath)) {
+  if (taskFileName.endsWith(ext)) {
+    const taskName = path.basename(taskFileName, ext)
+    taskRunCommand.command(taskName, `${taskName} task`, {
+      executableFile: path.join(tasksPath, taskFileName),
+    })
+  }
+}
+
+program.parseAsync()
