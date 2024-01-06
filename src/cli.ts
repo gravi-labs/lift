@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { program } from 'commander'
 import fs from 'fs'
 import path from 'path'
@@ -134,13 +135,15 @@ program
 const taskRunCommand = program.command('task:run').description('Run task')
 
 const tasksPath = getTasksPath()
-const ext = '.js'
-for (const taskFileName of fs.readdirSync(tasksPath)) {
-  if (taskFileName.endsWith(ext)) {
-    const taskName = path.basename(taskFileName, ext)
-    taskRunCommand.command(taskName, `${taskName} task`, {
-      executableFile: path.join(tasksPath, taskFileName),
-    })
+if (fs.existsSync(tasksPath)) {
+  const ext = '.js'
+  for (const taskFileName of fs.readdirSync(tasksPath)) {
+    if (taskFileName.endsWith(ext)) {
+      const taskName = path.basename(taskFileName, ext)
+      taskRunCommand.command(taskName, `${taskName} task`, {
+        executableFile: path.join(tasksPath, taskFileName),
+      })
+    }
   }
 }
 
