@@ -9,7 +9,7 @@ export function getTasksPath() {
 }
 
 export const TASK_TEMPLATE_WORKSPACE = `
-import { task } from 'lift'
+import { task } from '@gravi-labs/lift'
 
 task((context) => {
   console.log('Hello from task!')
@@ -17,7 +17,7 @@ task((context) => {
 `
 
 export const TASK_TEMPLATE_CONTRACT = `
-import { contractTask } from 'lift'
+import { contractTask } from '@gravi-labs/lift'
 
 contractTask((context, contract) => {
   console.log('Hello from contract task!')

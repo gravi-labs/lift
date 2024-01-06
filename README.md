@@ -185,7 +185,7 @@ Tasks are located in the `tasks` folder of your repository.
 ### General Task
 
 ```js
-import { task } from 'lift'
+import { task } from '@gravi-labs/lift'
 
 task((context) => {
   console.log('Hello from task!')
@@ -195,7 +195,7 @@ task((context) => {
 ### Contract task
 
 ```js
-import { contractTask } from 'lift'
+import { contractTask } from '@gravi-labs/lift'
 
 contractTask((context, contract) => {
   console.log('Hello from contract task!')
@@ -205,7 +205,7 @@ contractTask((context, contract) => {
 ### Task with custom command line arguments
 
 ```js
-import { task, workspaceCommand } from 'lift'
+import { task, workspaceCommand } from '@gravi-labs/lift'
 
 const command = workspaceCommand()
 command.option('-l, --log', 'log')
