@@ -224,3 +224,7 @@ task(command, (context) => {
 - integrate chain-registry (https://github.com/cosmos/chain-registry)
 - interactive console
 - multichain dApp support
+- plugins
+    - load tasks from plugin
+    - load other smart contracts (nft, dex, money market)
+    - load mainnet / testnet contract state 
