@@ -9,6 +9,7 @@
     "format": "eslint . --fix",
     "prettify": "prettier . --write",
     "prepare": "husky install",
+    "prepublish": "npm run build",
     "build": "tsc --build",
     "clean": "tsc --build --clean"
   },
